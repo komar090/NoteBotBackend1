@@ -109,6 +109,8 @@ async def main():
     scheduler.start()
     
     print("Bot is starting...")
+    bot_info = await bot.get_me()
+    print(f"🤖 CONNECTED AS: @{bot_info.username} (ID: {bot_info.id})")
     await dp.start_polling(bot)
 
 if __name__ == "__main__":
