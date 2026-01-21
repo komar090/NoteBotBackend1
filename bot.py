@@ -4,6 +4,15 @@ from aiogram import Bot, Dispatcher
 from config_reader import config
 from database.database import db
 from middlewares.auth import AuthMiddleware
+from aiogram import BaseMiddleware
+from aiogram.types import Message
+
+class DebugMiddleware(BaseMiddleware):
+    async def __call__(self, handler, event, data):
+        if isinstance(event, Message):
+            print(f"🕵️ DEBUG MSG: ContentType={event.content_type} | WebAppData={event.web_app_data} | Text={event.text}")
+        return await handler(event, data)
+
 from handlers import setup, admin, tasks, voice
 
 # Configure logging
@@ -72,6 +81,7 @@ async def main():
     dp = Dispatcher()
 
     # Register Middlewares
+    dp.message.middleware(DebugMiddleware())
     dp.message.middleware(AuthMiddleware())
     # Callback queries also need auth if we check permissions there, 
     # but for now let's add it to messages. Ideally adding to outer middleware.
