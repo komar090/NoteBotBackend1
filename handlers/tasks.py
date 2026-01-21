@@ -1,6 +1,6 @@
 from aiogram import Router, F
 from aiogram.filters import Command, StateFilter
-from aiogram.types import Message, CallbackQuery, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton
+from aiogram.types import Message, CallbackQuery, ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardMarkup, InlineKeyboardButton, WebAppInfo
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from aiogram_calendar import SimpleCalendar, SimpleCalendarCallback
@@ -11,6 +11,7 @@ from database.database import db
 from keyboards.task_kb import get_categories_kb, get_reminder_kb
 
 from utils.gigachat_client import GigaChatClient
+from config_reader import config
 
 router = Router()
 ai_client = GigaChatClient()
@@ -66,7 +67,10 @@ async def web_app_data_handler(message: Message, state: FSMContext, is_premium: 
                 f"📝 {text}\n"
                 f"📂 {category}{msg_alert}",
                 reply_markup=ReplyKeyboardMarkup(
-                    keyboard=[[KeyboardButton(text="≡ Меню")]],
+                    keyboard=[
+                        [KeyboardButton(text="🚀 Создать задачу", web_app=WebAppInfo(url=config.web_app_url))],
+                        [KeyboardButton(text="≡ Меню")]
+                    ],
                     resize_keyboard=True
                 )
             )
