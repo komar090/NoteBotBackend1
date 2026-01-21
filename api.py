@@ -30,15 +30,8 @@ async def startup():
     await db.connect() # Ensure connection is open
     print("API connected to Database")
     
-    # Auto-start Ngrok
-    if ngrok:
-        try:
-            # We need to ensure we have a token eventually, but for now let's try connecting
-            # Accessing the public_url
-            tunnel = ngrok.connect(8000)
-            print(f"🚀 \n\nHTTPS TUNNEL URL: {tunnel.public_url}\n\n 🚀")
-        except Exception as e:
-            print(f"Ngrok auto-start failed (maybe need auth token): {e}")
+    # Auto-start Ngrok removed to avoid conflicts with Serveo
+
 
 @app.on_event("shutdown")
 async def shutdown():
