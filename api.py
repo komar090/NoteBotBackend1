@@ -30,7 +30,7 @@ async def startup():
     await db.connect() # Ensure connection is open
     print("API connected to Database")
     
-    # Auto-start Ngrok removed to avoid conflicts with Serveo
+    # Auto-start Ngrok removed to avoid conflicts with Serveo (Updated 02:25)
 
 
 @app.on_event("shutdown")
