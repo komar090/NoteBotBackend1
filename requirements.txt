@@ -6,3 +6,10 @@ pydantic-settings
 gigachat
 aiogram_calendar
 python-dotenv
+SpeechRecognition
+pydub
+soundfile
+fastapi
+uvicorn
+python-multipart
+pyngrok
