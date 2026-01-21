@@ -29,8 +29,10 @@ class TaskStates(StatesGroup):
 @router.message(F.content_type == "web_app_data")
 async def web_app_data_handler(message: Message, state: FSMContext, is_premium: bool):
     import json
+    logging.info("WEB APP DATA HANDLER TRIGGERED!")
     try:
         data = json.loads(message.web_app_data.data)
+        logging.info(f"Received data: {data}")
         if data.get('action') == 'create_task':
             text = data.get('text')
             category = data.get('category')
