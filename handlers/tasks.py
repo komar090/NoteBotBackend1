@@ -15,7 +15,8 @@ from config_reader import config
 
 router = Router()
 ai_client = GigaChatClient()
-print("--> TASKS MODULE LOADED (Debug) <--")
+ai_client = GigaChatClient()
+
 
 class TaskStates(StatesGroup):
     waiting_for_category = State()
@@ -30,10 +31,9 @@ class TaskStates(StatesGroup):
 @router.message(F.web_app_data)
 async def web_app_data_handler(message: Message, state: FSMContext, is_premium: bool):
     import json
-    logging.info("WEB APP DATA HANDLER TRIGGERED!")
+    import json
     try:
         data = json.loads(message.web_app_data.data)
-        logging.info(f"Received data: {data}")
         if data.get('action') == 'create_task':
             text = data.get('text')
             category = data.get('category')

@@ -14,17 +14,6 @@ class CategoryStates(StatesGroup):
     waiting_for_new_name = State()
 
 
-@router.message(F.web_app_data) # Handler moved here for debug
-async def web_app_debug_handler(message: Message, state: FSMContext):
-    import json
-    import logging
-    logging.error("🔥🔥🔥 SETUP HANDLER CAUGHT WEB APP DATA! 🔥🔥🔥")
-    try:
-        data = json.loads(message.web_app_data.data)
-        await message.answer(f"DEBUG: Получены данные!\n{data}")
-    except Exception as e:
-        await message.answer(f"DEBUG ERROR: {e}")
-
 @router.message(Command("start"))
 async def cmd_start(message: Message, command: CommandObject, is_premium: bool):
     # Handle Referral
