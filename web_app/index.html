@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Новая задача</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <h1>✨ Новая задача</h1>
+        
+        <div class="form-group">
+            <label for="taskInput">Что нужно сделать?</label>
+            <textarea id="taskInput" rows="3" placeholder="Например: Купить продукты..."></textarea>
+        </div>
+
+        <div class="form-group">
+            <label for="categorySelect">Категория</label>
+            <select id="categorySelect">
+                <!-- Options populated by JS or static defaults -->
+                <option value="Работа">💼 Работа</option>
+                <option value="Личное">🏠 Личное</option>
+                <option value="Покупки">🛒 Покупки</option>
+                <option value="Учеба">📚 Учеба</option>
+                <option value="Идеи">💡 Идеи</option>
+            </select>
+        </div>
+        
+        <div class="row">
+            <div class="form-group half">
+                <label for="dateInput">Дата (опц.)</label>
+                <input type="date" id="dateInput">
+            </div>
+            <div class="form-group half">
+                <label for="timeInput">Время (опц.)</label>
+                <input type="time" id="timeInput">
+            </div>
+        </div>
+
+        <p class="hint">Нажмите "Создать" внизу экрана</p>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html>

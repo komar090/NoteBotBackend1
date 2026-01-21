@@ -1,0 +1,26 @@
+2026-01-21 14:28:12,935 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-01-21 14:28:12,938 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-01-21 14:28:12,939 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-01-21 14:28:12,939 - apscheduler.scheduler - INFO - Adding job tentatively -- it will be properly scheduled when the scheduler starts
+2026-01-21 14:28:12,939 - apscheduler.scheduler - INFO - Added job "check_reminders" to job store "default"
+2026-01-21 14:28:12,939 - apscheduler.scheduler - INFO - Added job "send_morning_digest" to job store "default"
+2026-01-21 14:28:12,960 - apscheduler.scheduler - INFO - Added job "send_marketing_mail" to job store "default"
+2026-01-21 14:28:12,960 - apscheduler.scheduler - INFO - Added job "check_subscriptions" to job store "default"
+2026-01-21 14:28:12,960 - apscheduler.scheduler - INFO - Scheduler started
+2026-01-21 14:28:12,961 - aiogram.dispatcher - INFO - Start polling
+2026-01-21 14:28:13,402 - aiogram.dispatcher - INFO - Run polling for bot @tasks_goals_bot id=8410626749 - 'Note'
+2026-01-21 14:28:20,280 - aiogram.event - INFO - Update id=253408337 is handled. Duration 546 ms by bot id=8410626749
+2026-01-21 14:28:22,391 - aiogram.event - INFO - Update id=253408338 is handled. Duration 250 ms by bot id=8410626749
+2026-01-21 14:28:24,883 - aiogram.event - INFO - Update id=253408339 is handled. Duration 109 ms by bot id=8410626749
+2026-01-21 14:28:27,838 - aiogram.event - INFO - Update id=253408340 is handled. Duration 266 ms by bot id=8410626749
+2026-01-21 14:28:31,621 - aiogram.event - INFO - Update id=253408341 is handled. Duration 109 ms by bot id=8410626749
+2026-01-21 14:28:32,838 - aiogram.event - INFO - Update id=253408342 is handled. Duration 108 ms by bot id=8410626749
+2026-01-21 14:28:37,353 - aiogram.event - INFO - Update id=253408343 is handled. Duration 109 ms by bot id=8410626749
+2026-01-21 14:29:12,949 - apscheduler.executors.default - INFO - Running job "check_reminders (trigger: interval[0:01:00], next run at: 2026-01-21 14:30:12 +07)" (scheduled at 2026-01-21 14:29:12.935292+07:00)
+2026-01-21 14:29:12,949 - apscheduler.executors.default - INFO - Job "check_reminders (trigger: interval[0:01:00], next run at: 2026-01-21 14:30:12 +07)" executed successfully
+2026-01-21 14:30:12,951 - apscheduler.executors.default - INFO - Running job "check_reminders (trigger: interval[0:01:00], next run at: 2026-01-21 14:31:12 +07)" (scheduled at 2026-01-21 14:30:12.935292+07:00)
+2026-01-21 14:30:12,952 - apscheduler.executors.default - INFO - Job "check_reminders (trigger: interval[0:01:00], next run at: 2026-01-21 14:31:12 +07)" executed successfully
+2026-01-21 14:31:12,947 - apscheduler.executors.default - INFO - Running job "check_reminders (trigger: interval[0:01:00], next run at: 2026-01-21 14:32:12 +07)" (scheduled at 2026-01-21 14:31:12.935292+07:00)
+2026-01-21 14:31:12,947 - apscheduler.executors.default - INFO - Job "check_reminders (trigger: interval[0:01:00], next run at: 2026-01-21 14:32:12 +07)" executed successfully
+2026-01-21 14:32:12,939 - apscheduler.executors.default - INFO - Running job "check_reminders (trigger: interval[0:01:00], next run at: 2026-01-21 14:33:12 +07)" (scheduled at 2026-01-21 14:32:12.935292+07:00)
+2026-01-21 14:32:12,940 - apscheduler.executors.default - INFO - Job "check_reminders (trigger: interval[0:01:00], next run at: 2026-01-21 14:33:12 +07)" executed successfully
