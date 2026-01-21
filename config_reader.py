@@ -11,6 +11,7 @@ class Settings(BaseSettings):
     bot_token: SecretStr
     admin_ids: List[int]
     gigachat_auth: SecretStr
+    web_app_url: str = "https://komar090.github.io/NoteBotWeb/"
 
     model_config = SettingsConfigDict(env_file='.env', env_file_encoding='utf-8', case_sensitive=False)
 
