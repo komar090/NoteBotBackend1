@@ -87,42 +87,15 @@ async def web_app_data_handler(message: Message, state: FSMContext, is_premium: 
 
 @router.message(F.text, ~F.text.startswith("/"), F.text != "≡ Меню", StateFilter(None))
 async def task_text_handler(message: Message, state: FSMContext, is_premium: bool):
-    # Check task limit for free users
-    if not is_premium:
-        count = await db.get_active_tasks_count(message.from_user.id)
-        if count >= 7:
-            user_data = await db.get_user(message.from_user.id)
-            trial_used = user_data['trial_used'] if user_data else True
-            
-            kb_btns = []
-            if not trial_used:
-                kb_btns.append([InlineKeyboardButton(text="🎁 Попробовать 3 дня бесплатно", callback_data="activate_trial")])
-            
-            kb_btns.append([InlineKeyboardButton(text="💎 Купить Premium", callback_data="check_subscription")])
-            
-            trial_text = ""
-            if not trial_used:
-                 trial_text = "\n\nВы можете активировать <b>бесплатный пробный период на 3 дня</b>, чтобы оценить все возможности!"
-
-            await message.answer(
-                "⚠️ <b>Лимит задач исчерпан!</b>\n\n"
-                "Для бесплатных пользователей доступно до <b>7 активных задач</b>."
-                f"{trial_text}\n\n"
-                "Купите <b>Premium</b>, чтобы снять все ограничения! 🚀",
-                reply_markup=InlineKeyboardMarkup(inline_keyboard=kb_btns),
-                parse_mode="HTML"
-            )
-            return
-
-    # Fallback to manual flow (AI Removed)
-    await state.update_data(task_text=message.text)
-    custom_cats = await db.get_user_categories(message.from_user.id)
-    
+    # Instead of starting flow, point to Mini App
     await message.answer(
-        f"📝 Заметка: \"{message.text}\"\nВ какую категорию добавим?",
-        reply_markup=get_categories_kb(custom_cats)
+        "👋 <b>Используйте Mini App для управления задачами!</b>\n\n"
+        "Мы перенесли всё управление в удобный интерфейс. Просто нажмите кнопку ниже, чтобы создать или просмотреть свои задачи.",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🚀 Открыть приложение", web_app=WebAppInfo(url=config.web_app_url))]
+        ]),
+        parse_mode="HTML"
     )
-    await state.set_state(TaskStates.waiting_for_category)
 
 # 2. Handle Category selection
 @router.callback_query(TaskStates.waiting_for_category, F.data.startswith("cat_"))

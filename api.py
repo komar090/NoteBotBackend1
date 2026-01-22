@@ -91,12 +91,25 @@ def validate_telegram_data(init_data: str) -> dict:
 # -- Endpoints --
 
 @app.get("/")
-async def health_check():
-    return {"status": "ok", "service": "Note Bot API", "version": "2.0 (AI+Voice)"}
+async def root():
+    return {"status": "ok", "service": "Note Bot API", "version": "3.0 (Mini App Focus)"}
 
-@app.get("/api/")
-async def health_check_api():
-    return {"status": "ok", "service": "Note Bot API", "version": "2.0 (AI+Voice)"}
+@app.get("/api/health")
+async def health_check():
+    """Self-check for API and Database."""
+    checks = {
+        "api": "ok",
+        "database": "unknown"
+    }
+    try:
+        # Check DB connection
+        await db.conn.execute("SELECT 1")
+        checks["database"] = "ok"
+    except Exception as e:
+        checks["database"] = f"error: {str(e)}"
+    
+    overall = "ok" if checks["database"] == "ok" else "degraded"
+    return {"status": overall, "checks": checks}
 
 @app.get("/api/tasks")
 async def get_tasks(initData: str):
@@ -139,11 +152,58 @@ async def complete_task(task_id: int, initData: str):
 async def delete_task_endpoint(task_id: int, initData: str):
     """Delete a task."""
     user = validate_telegram_data(initData)
-    user_id = user['id']
-    
-    # Ownership check could be here
-    await db.delete_task(task_id)
+    # Check if we have delete_task in DB
+    try:
+        await db.conn.execute("DELETE FROM tasks WHERE id = ?", (task_id,))
+        await db.conn.commit()
+    except Exception as e:
+         raise HTTPException(status_code=500, detail=str(e))
     return {"status": "success", "id": task_id}
+
+# -- Category Management --
+
+@app.get("/api/categories")
+async def get_categories(initData: str):
+    user = validate_telegram_data(initData)
+    user_id = user['id']
+    cats = await db.get_user_categories(user_id)
+    return cats
+
+@app.post("/api/categories")
+async def add_category(initData: str, name: str = Form(...)):
+    user = validate_telegram_data(initData)
+    user_id = user['id']
+    await db.add_category(user_id, name)
+    return {"status": "success"}
+
+@app.delete("/api/categories/{name}")
+async def delete_category(initData: str, name: str):
+    user = validate_telegram_data(initData)
+    user_id = user['id']
+    await db.delete_category(user_id, name)
+    return {"status": "success"}
+
+# -- Settings --
+
+@app.post("/api/settings/timezone")
+async def set_timezone(initData: str, timezone: str = Form(...)):
+    user = validate_telegram_data(initData)
+    user_id = user['id']
+    await db.set_timezone(user_id, timezone)
+    return {"status": "success"}
+
+@app.get("/api/settings")
+async def get_settings(initData: str):
+    user = validate_telegram_data(initData)
+    user_id = user['id']
+    user_data = await db.get_user(user_id)
+    if not user_data:
+         return {"timezone": "UTC", "is_premium": False}
+    return {
+        "timezone": user_data['timezone'],
+        "is_premium": bool(user_data['is_premium']),
+        "premium_until": user_data['premium_until']
+    }
 
 
 

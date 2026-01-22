@@ -25,93 +25,26 @@ async def cmd_start(message: Message, command: CommandObject, is_premium: bool):
                 user = await db.get_user(user_id)
                 if user and not user['referred_by']:
                     await db.add_referral(user_id, referrer_id)
-                    # Notify referrer? Later. 
         except:
             pass
 
     status_text = "🌟 Premium Пользователь" if is_premium else "👤 Пользователь"
     
     await message.answer(
-        f"Привет! Я твой персональный помощник.\n"
+        f"Привет! Я твой персональный помощник <b>Note Bot</b>.\n\n"
         f"Твой статус: {status_text}\n\n"
-        "Напиши мне любую мысль, и я сохраню её как задачу.",
-        reply_markup=ReplyKeyboardMarkup(
-            keyboard=[
-                [KeyboardButton(text="🚀 Создать задачу", web_app=WebAppInfo(url=config.web_app_url))],
-                [KeyboardButton(text="≡ Меню")]
-            ],
-            resize_keyboard=True
-        )
+        "Всё управление задачами теперь доступно в нашем <b>Mini App</b>. Списки дел, категории, "
+        "напоминания и голосовой ввод — всё в одном месте!",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
+            [InlineKeyboardButton(text="🚀 Открыть приложение", web_app=WebAppInfo(url=config.web_app_url))],
+            [InlineKeyboardButton(text="≡ Обновить", callback_data="refresh_menu")]
+        ]),
+        parse_mode="HTML"
     )
-
-@router.message(Command("me"))
-async def cmd_me(message: Message, is_premium: bool):
-    user_id = message.from_user.id
-    user = await db.get_user(user_id)
-    stats = await db.get_user_stats(user_id)
-    
-    if not user:
-        return # Should not happen if middleware works
-
-    # Calculate days with us
-    from datetime import datetime
-    try:
-        created_dt = datetime.strptime(user['created_at'], '%Y-%m-%d %H:%M:%S')
-        days_with_us = (datetime.now() - created_dt).days
-    except:
-        days_with_us = 0
-        
-    status_icon = "🌟" if is_premium else "👤"
-    status_text = "Premium" if is_premium else "Обычный"
-    
-    # Progress Bar
-    total = stats['total']
-    done = stats['done']
-    percent = int((done / total) * 100) if total > 0 else 0
-    bar_len = 10
-    filled = int(bar_len * percent / 100)
-    bar = "▓" * filled + "░" * (bar_len - filled)
-    
-    text = (
-        f"<b>{status_icon} Ваш профиль</b>\n\n"
-        f"🆔 ID: <code>{user_id}</code>\n"
-        f"📅 С нами: {days_with_us} дн.\n"
-        f"💎 Статус: <b>{status_text}</b>\n\n"
-        f"<b>📊 Статистика:</b>\n"
-        f"✅ Выполнено: {done}\n"
-        f"📝 Всего задач: {total}\n"
-        f"📈 Продуктивность: {percent}%\n"
-        f"[{bar}]"
-    )
-    
-    kb = InlineKeyboardMarkup(inline_keyboard=[
-        [InlineKeyboardButton(text="📝 Мои задачи", callback_data="my_tasks_cb")],
-        [InlineKeyboardButton(text="⚙️ Настройки", callback_data="back_settings")]
-    ])
-    
-    await message.answer(text, reply_markup=kb, parse_mode="HTML")
 
 @router.message(F.text == "≡ Меню")
 async def main_menu_handler(message: Message, is_premium: bool):
-    keyboard = [
-        [InlineKeyboardButton(text="📝 Мои задачи", callback_data="my_tasks_cb")],
-        [InlineKeyboardButton(text="⚙️ Настройки", callback_data="back_settings")]
-    ]
-    
-    if not is_premium:
-        keyboard.append([InlineKeyboardButton(text="💎 Купить Premium", callback_data="check_subscription")])
-        
-    keyboard.append([InlineKeyboardButton(text="🆘 Тех. поддержка", url="tg://user?id=272195202")])
-    
-    if message.from_user.id in config.admin_ids:
-        keyboard.append([InlineKeyboardButton(text="👑 Админ панель", callback_data="admin_panel")])
-        
-    await message.answer(
-        "<b>📂 Главное меню</b>\n\n"
-        "Выберите нужное действие:",
-        reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard),
-        parse_mode="HTML"
-    )
+    await cmd_start(message, None, is_premium)
 
 @router.callback_query(F.data == "refresh_menu")
 async def cb_refresh_menu(callback: CallbackQuery, is_premium: bool):

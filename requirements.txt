@@ -12,4 +12,3 @@ soundfile
 fastapi
 uvicorn
 python-multipart
-pyngrok
