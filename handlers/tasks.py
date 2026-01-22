@@ -14,8 +14,9 @@ from utils.gigachat_client import GigaChatClient
 from config_reader import config
 
 router = Router()
-ai_client = GigaChatClient()
-ai_client = GigaChatClient()
+
+# Removed AI Client
+
 
 
 class TaskStates(StatesGroup):
@@ -113,74 +114,15 @@ async def task_text_handler(message: Message, state: FSMContext, is_premium: boo
             )
             return
 
-    # Try AI analysis only for premium
-    ai_data = None
-    if is_premium:
-        logging.info(f"Received text for processing: {message.text}")
-        processing_msg = await message.answer("🤖 Нейросеть анализирует задачу...")
-        try:
-            ai_data = await ai_client.analyze_task(message.text)
-            logging.info(f"AI analysis result: {ai_data}")
-        except Exception as e:
-            logging.error(f"AI analysis exception: {e}")
-            ai_data = None
-        await processing_msg.delete()
-
-    if ai_data and ai_data.get('category'):
-        # AI successfully extracted data
-        category = ai_data['category']
-        clean_text = ai_data.get('clean_text', message.text)
-        date_str = ai_data.get('date') # YYYY-MM-DD
-        time_str = ai_data.get('time') # HH:MM
-        
-        # Save raw AI data to state
-        await state.update_data(
-            task_text=clean_text, 
-            ai_category=category,
-            ai_date=date_str, 
-            ai_time=time_str
-        )
-        
-        info_text = (
-            f"🤖 <b>Нейросеть поняла так:</b>\n"
-            f"📝 Задача: {clean_text}\n"
-            f"📂 Категория: {category}\n"
-        )
-        if date_str:
-            info_text += f"📅 Дата: {date_str}\n"
-        if time_str:
-            info_text += f"⏰ Время: {time_str}\n"
-            
-        info_text += "\nСоздать задачу?"
-
-        msg_btns = [
-            [
-                InlineKeyboardButton(text="✅ Да, создать", callback_data="ai_confirm_yes"),
-                InlineKeyboardButton(text="✏️ Нет, вручную", callback_data="ai_confirm_no")
-            ]
-        ]
-        
-        # If we have a date but no time, we could add quick time selection here 
-        # But to keep it simple, let's just show what we found and ask for confirmation.
-        # If user says "Yes", we can use 09:00 or ask for time if they want to be precise.
-
-        await message.answer(
-            info_text,
-            reply_markup=InlineKeyboardMarkup(inline_keyboard=msg_btns),
-            parse_mode="HTML"
-        )
-        await state.set_state(TaskStates.waiting_for_ai_confirmation)
-
-    else:
-        # Fallback to manual flow
-        await state.update_data(task_text=message.text)
-        custom_cats = await db.get_user_categories(message.from_user.id)
-        
-        await message.answer(
-            f"📝 Заметка: \"{message.text}\"\nВ какую категорию добавим?",
-            reply_markup=get_categories_kb(custom_cats)
-        )
-        await state.set_state(TaskStates.waiting_for_category)
+    # Fallback to manual flow (AI Removed)
+    await state.update_data(task_text=message.text)
+    custom_cats = await db.get_user_categories(message.from_user.id)
+    
+    await message.answer(
+        f"📝 Заметка: \"{message.text}\"\nВ какую категорию добавим?",
+        reply_markup=get_categories_kb(custom_cats)
+    )
+    await state.set_state(TaskStates.waiting_for_category)
 
 # 2. Handle Category selection
 @router.callback_query(TaskStates.waiting_for_category, F.data.startswith("cat_"))
