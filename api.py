@@ -92,7 +92,7 @@ def validate_telegram_data(init_data: str) -> dict:
 
 @app.get("/")
 async def health_check():
-    return {"status": "ok", "service": "Note Bot API"}
+    return {"status": "ok", "service": "Note Bot API", "version": "2.0 (AI+Voice)"}
 
 @app.get("/api/tasks")
 async def get_tasks(initData: str):
