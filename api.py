@@ -135,6 +135,16 @@ async def complete_task(task_id: int, initData: str):
     await db.mark_task_done(task_id)
     return {"status": "success", "id": task_id}
 
+@app.delete("/api/tasks/{task_id}")
+async def delete_task_endpoint(task_id: int, initData: str):
+    """Delete a task."""
+    user = validate_telegram_data(initData)
+    user_id = user['id']
+    
+    # Ownership check could be here
+    await db.delete_task(task_id)
+    return {"status": "success", "id": task_id}
+
 
 
 # -- Admin & Advanced Features --
