@@ -135,16 +135,12 @@ async def send_morning_digest(bot: Bot):
     """
     Sends a morning summary of active tasks to each user.
     """
-    from utils.gigachat_client import GigaChatClient
-    ai_client = GigaChatClient()
+    # Removed AI summary in favor of Classic List (Faster/Cleaner)
     
     try:
         users = await db.get_all_users()
         for user in users:
             uid = user['id']
-            # Only for premium? User didn't specify, but usually digest is a premium feature.
-            # Let's check logic: User said "все, что ты написал - реализуем". 
-            # My idea said "Digest for premium". So I will stick to premium.
             if not user['is_premium']:
                 continue
                 
@@ -152,9 +148,14 @@ async def send_morning_digest(bot: Bot):
             if not tasks:
                 continue
             
-            summary = await ai_client.summarize_tasks(tasks)
-            if summary:
-                await bot.send_message(uid, f"☀️ <b>Доброе утро! Твой план на сегодня:</b>\n\n{summary}", parse_mode="HTML")
+            # Simple list generation
+            task_list = "\n".join([f"• {t['text']}" for t in tasks])
+            
+            await bot.send_message(
+                uid, 
+                f"☀️ <b>Доброе утро! Твой план на сегодня:</b>\n\n{task_list}\n\n<i>Продуктивного дня!</i>", 
+                parse_mode="HTML"
+            )
                 
     except Exception as e:
         logging.error(f"Morning digest failed: {e}")
@@ -209,8 +210,8 @@ async def send_marketing_mail(bot: Bot, force: bool = False):
                 should_send = True
                 msg_text = (
                     "🌟 <b>Специальное предложение для вас!</b>\n\n"
-                    "Откройте мощь <b>нейросети</b> прямо в Telegram. "
-                    "Автоматический разбор задач, голосовой ввод и утренние дайджесты.\n\n"
+                    "Откройте мощь <b>Note Bot Premium</b>.\n"
+                    "Неограниченные категории, голосовой ввод, темы оформления и никакой рекламы.\n\n"
                     "Всего за <b>290₽/мес</b>. Попробуйте <b>Premium</b> и почувствуйте разницу! 💎"
                 )
             elif not last_promo:
@@ -220,8 +221,8 @@ async def send_marketing_mail(bot: Bot, force: bool = False):
                     msg_text = (
                         "👋 <b>Как ваши успехи с Note Bot?</b>\n\n"
                         "Знаете ли вы, что ваша продуктивность может вырасти в 2 раза? "
-                        "Наша <b>нейросеть</b> может сама разбирать ваши задачи и планировать день!\n\n"
-                        "Откройте все возможности с <b>Premium</b>. Это ваш персональный умный ассистент. 🚀"
+                        "Организуйте свои дела с помощью темных тем, голосового ввода и расширенной статистики!\n\n"
+                        "Откройте все возможности с <b>Premium</b>. Это ваш персональный инструмент успеха. 🚀"
                     )
             else:
                 # Periodic check (> 3 days)
@@ -230,9 +231,10 @@ async def send_marketing_mail(bot: Bot, force: bool = False):
                     msg_text = (
                         "🌟 <b>Сделайте шаг к идеальному порядку!</b>\n\n"
                         "Premium-подписка дает вам:\n"
-                        "• 🤖 <b>Нейросеть</b> для быстрого ввода (текст и голос)\n"
+                        "• 🎤 <b>Голосовой ввод</b> (быстро и удобно)\n"
                         "• 📂 <b>Безлимит</b> на категории и архив\n"
-                        "• ☀️ <b>ИИ-дайджест</b> ваших дел по утрам\n\n"
+                        "• 🎨 <b>Уникальные темы</b> (Cyberpunk, Aurora)\n"
+                        "• ☀️ <b>Утренний дайджест</b> ваших дел\n\n"
                         "Всего за <b>290₽/мес</b>. Начните использовать технологии на максимум! 💎"
                     )
             
