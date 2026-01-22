@@ -14,14 +14,16 @@ class GigaChatClient:
     async def analyze_task(self, text: str) -> Optional[Dict[str, Any]]:
         """
         Analyzes the task text using GigaChat to extract category, date, time, and cleaned text.
-        Returns a dictionary or None if analysis fails or times out.
+        Returns a dictionary with result or error detail.
         """
         import asyncio
         try:
-            return await asyncio.wait_for(asyncio.to_thread(self._analyze_task_sync, text), timeout=10.0)
+            # Increased timeout to 25s for slow models
+            return await asyncio.wait_for(asyncio.to_thread(self._analyze_task_sync, text), timeout=25.0)
         except asyncio.TimeoutError:
-            logger.error("GigaChat analysis timed out (10s)")
-            return None
+            logger.error("GigaChat analysis timed out")
+            # Return error in text so user sees it
+            return {"text": f"[AI TIMEOUT] {text}", "category": "Личное", "date": None, "time": None}
 
     def _analyze_task_sync(self, text: str) -> Optional[Dict[str, Any]]:
         # Получаем текущую дату и день недели для контекста
@@ -66,12 +68,15 @@ class GigaChatClient:
                 
                 logging.info(f"GigaChat cleaned response: {content}")
                 
-                data = json.loads(content)
-                return data
+                try:
+                    data = json.loads(content)
+                    return data
+                except json.JSONDecodeError:
+                     return {"text": f"[AI JSON ERROR] {content[:50]}...", "category": "Личное", "date": None, "time": None}
                 
         except Exception as e:
             logger.error(f"GigaChat analysis failed: {e}")
-            return None
+            return {"text": f"[AI EXCEPTION] {e}", "category": "Личное", "date": None, "time": None}
 
     async def summarize_tasks(self, tasks: list) -> Optional[str]:
         """
