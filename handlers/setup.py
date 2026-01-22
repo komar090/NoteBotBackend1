@@ -22,15 +22,20 @@ async def cmd_start(message: Message, command: CommandObject, is_premium: bool):
 
     status_text = "🌟 Premium Пользователь" if is_premium else "👤 Пользователь"
     
+    keyboard = [
+        [InlineKeyboardButton(text="🚀 Открыть приложение", web_app=WebAppInfo(url=config.web_app_url))],
+        [InlineKeyboardButton(text="≡ Обновить", callback_data="refresh_menu")]
+    ]
+    
+    if message.from_user.id in config.admin_ids:
+        keyboard.append([InlineKeyboardButton(text="👑 Админ панель", callback_data="admin_panel")])
+    
     await message.answer(
         f"Привет! Я твой персональный помощник <b>Note Bot</b>.\n\n"
         f"Твой статус: {status_text}\n\n"
         "Всё управление задачами теперь доступно в нашем <b>Mini App</b>. Списки дел, категории, "
         "напоминания и голосовой ввод — всё в одном месте!",
-        reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-            [InlineKeyboardButton(text="🚀 Открыть приложение", web_app=WebAppInfo(url=config.web_app_url))],
-            [InlineKeyboardButton(text="≡ Обновить", callback_data="refresh_menu")]
-        ]),
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=keyboard),
         parse_mode="HTML"
     )
 
