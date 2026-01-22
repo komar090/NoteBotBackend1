@@ -114,11 +114,11 @@ async def health_check():
 @app.get("/api/tasks")
 async def get_tasks(initData: str):
     """Get active tasks for the user."""
+    print(f"DEBUG: API /tasks call with initData length {len(initData)}")
     user = validate_telegram_data(initData)
     user_id = user['id']
     
     tasks = await db.get_user_tasks(user_id)
-    # Convert Row objects to dicts
     return [{"id": t['id'], "text": t['text'], "category": t['category'], "created_at": t['created_at']} for t in tasks]
 
 @app.post("/api/tasks")
@@ -212,15 +212,13 @@ async def get_settings(initData: str):
 @app.get("/api/me")
 async def get_my_info(initData: str):
     """Return user info with admin status."""
+    print(f"DEBUG: API /me call")
     user = validate_telegram_data(initData)
     user_id = user['id']
     
     # Check if admin
-    print(f"DEBUG: User ID: {user_id} (type: {type(user_id)})")
-    print(f"DEBUG: Admin IDs: {config.admin_ids} (type: {type(config.admin_ids)})")
-    
     is_admin = user_id in config.admin_ids
-    print(f"DEBUG: Is Admin: {is_admin}")
+    print(f"DEBUG: User {user_id} is_admin={is_admin}")
     
     return {
         "id": user_id,
