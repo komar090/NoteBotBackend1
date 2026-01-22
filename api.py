@@ -131,10 +131,75 @@ async def complete_task(task_id: int, initData: str):
     await db.mark_task_done(task_id)
     return {"status": "success", "id": task_id}
 
-@app.delete("/api/tasks/{task_id}")
-async def delete_task_endpoint(task_id: int, initData: str):
-    """Delete task (using mark done logic or real delete?). Database.py has no single delete task, only mark done."""
-    """We'll use mark done for 'delete' from list view."""
-    user = validate_telegram_data(initData)
-    await db.mark_task_done(task_id)
-    return {"status": "deleted", "id": task_id}
+
+
+# -- Advanced Features (Voice & AI) --
+
+from utils.gigachat_client import GigaChatClient
+import speech_recognition as sr
+from pydub import AudioSegment
+import shutil
+
+ai_client = GigaChatClient()
+
+class AnalyzeRequest(BaseModel):
+    text: str
+
+@app.post("/api/analyze")
+async def analyze_text_endpoint(request: AnalyzeRequest, initData: str):
+    """Analyze text using GigaChat to extract date, time, and category."""
+    user = validate_telegram_data(initData) # Auth check
+    
+    analysis = await ai_client.analyze_task(request.text)
+    if not analysis:
+        # Fallback if AI fails
+        return {"text": request.text, "category": "Личное", "date": None, "time": None}
+        
+    return analysis
+
+@app.post("/api/voice")
+async def process_voice_endpoint(file: UploadFile = File(...), initData: str = Form(...)):
+    """Process voice message: Convert -> Transcribe -> Analyze."""
+    user = validate_telegram_data(initData) # Auth check
+    
+    # 1. Save uploaded file
+    temp_filename = f"voice_{user['id']}_{file.filename}"
+    with open(temp_filename, "wb") as buffer:
+        shutil.copyfileobj(file.file, buffer)
+        
+    wav_filename = f"{temp_filename}.wav"
+    
+    try:
+        # 2. Convert to WAV (SpeechRecognition needs WAV)
+        # Try pydub (requires ffmpeg installed on VPS)
+        try:
+            audio = AudioSegment.from_file(temp_filename)
+            audio.export(wav_filename, format="wav")
+        except Exception as e:
+            # Fallback for some systems if pydub fails, maybe rename? 
+            # But usually we need conversion. WebApp sends 'audio/webm' usually.
+            print(f"Conversion error: {e}")
+            raise HTTPException(status_code=500, detail="Audio conversion failed. Is FFmpeg installed?")
+
+        # 3. Transcribe
+        recognizer = sr.Recognizer()
+        with sr.AudioFile(wav_filename) as source:
+            audio_data = recognizer.record(source)
+            try:
+                text = recognizer.recognize_google(audio_data, language="ru-RU")
+            except sr.UnknownValueError:
+                raise HTTPException(status_code=400, detail="Речь не распознана")
+            except sr.RequestError:
+                raise HTTPException(status_code=503, detail="Ошибка сервиса распознавания")
+
+        # 4. Analyze with AI
+        analysis = await ai_client.analyze_task(text)
+        if not analysis:
+             analysis = {"text": text, "category": "Личное", "date": None, "time": None}
+             
+        return analysis
+
+    finally:
+        # Cleanup
+        if os.path.exists(temp_filename): os.remove(temp_filename)
+        if os.path.exists(wav_filename): os.remove(wav_filename)
