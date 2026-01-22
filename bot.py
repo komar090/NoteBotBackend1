@@ -22,6 +22,10 @@ logging.basicConfig(
 import ctypes
 
 def set_console_icon():
+    import platform
+    if platform.system() != "Windows":
+        return
+        
     try:
         kernel32 = ctypes.WinDLL('kernel32')
         user32 = ctypes.WinDLL('user32')
