@@ -5,13 +5,9 @@ import speech_recognition as sr
 import os
 from pydub import AudioSegment
 import logging
-# from handlers.tasks import cmd_text_message # Reuse existing logic? Or just call message.answer
-
 import html 
 from database.database import db
-from utils.gigachat_client import GigaChatClient
-
-ai_client = GigaChatClient()
+from handlers.tasks import TaskStates, get_categories_kb
 
 router = Router()
 
@@ -20,7 +16,8 @@ async def voice_message_handler(message: Message, state: FSMContext, bot: Bot, i
     if not is_premium:
         await message.answer(
             "🎤 <b>Голосовой ввод — это Premium-функция!</b>\n\n"
-            "Наша нейросеть расшифрует ваш голос и сама создаст задачу. Это экономит кучу времени.\n\n"
+            "Записывайте задачи голосом на бегу, а бот превратит их в текст.\n"
+            "Быстро, удобно, технологично.\n\n"
             "Попробуйте <b>Premium</b> прямо сейчас! 💎",
             reply_markup=InlineKeyboardMarkup(inline_keyboard=[
                 [InlineKeyboardButton(text="💎 Подробнее о Premium", callback_data="check_subscription")]
@@ -29,7 +26,7 @@ async def voice_message_handler(message: Message, state: FSMContext, bot: Bot, i
         )
         return
 
-    await message.answer("🎤 Слушаю...")
+    processing_msg = await message.answer("🎤 Обрабатываю аудио...")
     
     # Paths
     file_id = message.voice.file_id
@@ -44,27 +41,15 @@ async def voice_message_handler(message: Message, state: FSMContext, bot: Bot, i
         await bot.download_file(file_path, ogg_filename)
         
         # Convert OGG -> WAV
-        # Strategy: Try pydub (needs ffmpeg) -> Try soundfile (standalone lib)
         try:
              # Try 1: Pydub
              audio = AudioSegment.from_file(ogg_filename, format="ogg")
              audio.export(wav_filename, format="wav")
         except Exception as e_pydub:
-            logging.warning(f"Pydub conversion failed (FFmpeg missing?): {e_pydub}")
-            try:
-                # Try 2: Soundfile
-                import soundfile as sf
-                data, samplerate = sf.read(ogg_filename)
-                sf.write(wav_filename, data, samplerate)
-            except Exception as e_sf:
-                 logging.error(f"Soundfile conversion failed: {e_sf}")
-                 await message.answer(
-                    "⚠️ **Ошибка обработки аудио**\n"
-                    "Не удалось конвертировать голосовое сообщение.\n"
-                    "Пожалуйста, установите FFmpeg или используйте текстовый ввод."
-                 )
-                 if os.path.exists(ogg_filename): os.remove(ogg_filename)
-                 return
+            logging.warning(f"Pydub conversion failed: {e_pydub}")
+            await processing_msg.edit_text("⚠️ Ошибка конвертации аудио. Проверьте FFMPEG.")
+            if os.path.exists(ogg_filename): os.remove(ogg_filename)
+            return
 
         # Recognize
         recognizer = sr.Recognizer()
@@ -74,79 +59,34 @@ async def voice_message_handler(message: Message, state: FSMContext, bot: Bot, i
                 # Use Google Speech Recognition (Free)
                 text = recognizer.recognize_google(audio_data, language="ru-RU")
             except sr.UnknownValueError:
-                await message.answer("🤔 Не удалось разобрать речь.")
+                await processing_msg.edit_text("🤔 Не удалось разобрать речь.")
                 return
             except sr.RequestError:
-                await message.answer("⚠️ Ошибка сервиса распознавания.")
+                await processing_msg.edit_text("⚠️ Ошибка сервиса распознавания.")
                 return
                 
         # Success
-        await message.answer(f"🗣 **Распознано:**\n_{text}_", parse_mode="Markdown")
+        user_id = message.from_user.id
         
-        from handlers.tasks import TaskStates
+        # Manual Category Selection (Since AI is removed)
+        await state.update_data(task_text=text)
+        custom_cats = await db.get_user_categories(user_id)
         
-        # Try AI analysis
-        ai_msg = await message.answer("🤖 Нейросеть распознает смысл...")
-        ai_data = await ai_client.analyze_task(text)
-        await ai_msg.delete()
-
-        if ai_data and ai_data.get('category'):
-             # AI Success
-            category = ai_data['category']
-            clean_text = ai_data.get('clean_text', text)
-            date_str = ai_data.get('date')
-            time_str = ai_data.get('time')
-            
-            await state.update_data(
-                task_text=clean_text,
-                ai_category=category,
-                ai_date=date_str,
-                ai_time=time_str
-            )
-            
-            info_text = (
-                f"🤖 <b>Нейросеть поняла так:</b>\n"
-                f"📝 Задача: {clean_text}\n"
-                f"📂 Категория: {category}\n"
-            )
-            if date_str:
-                info_text += f"📅 Дата: {date_str}\n"
-            if time_str:
-                info_text += f"⏰ Время: {time_str}\n"
-                
-            info_text += "\nСоздать задачу?"
-            
-            await message.answer(
-                info_text,
-                reply_markup=InlineKeyboardMarkup(inline_keyboard=[
-                    [
-                        InlineKeyboardButton(text="✅ Да, создать", callback_data="ai_confirm_yes"),
-                        InlineKeyboardButton(text="✏️ Нет, вручную", callback_data="ai_confirm_no")
-                    ]
-                ]),
-                parse_mode="HTML"
-            )
-            await state.set_state(TaskStates.waiting_for_ai_confirmation)
-            
-        else:
-            # Fallback to manual
-            await state.update_data(task_text=text)
-            custom_cats = await db.get_user_categories(message.from_user.id)
-            await state.set_state(TaskStates.waiting_for_category)
-            
-            safe_text = html.escape(text)
-            await message.answer(
-                f"📂 Выберите категорию для задачи:\n"
-                f"<i>«{safe_text}»</i>",
-                reply_markup=get_categories_kb(custom_cats),
-                parse_mode="HTML"
-            )
+        await processing_msg.delete()
+        
+        safe_text = html.escape(text)
+        await message.answer(
+            f"🗣 <b>Распознано:</b>\n«{safe_text}»\n\n"
+            f"📂 Выберите категорию для сохранения:",
+            reply_markup=get_categories_kb(custom_cats),
+            parse_mode="HTML"
+        )
+        await state.set_state(TaskStates.waiting_for_category)
 
     except Exception as e:
         import traceback
-        error_trace = traceback.format_exc()
-        logging.error(f"Voice Error: {e}\n{error_trace}")
-        await message.answer(f"Произошла ошибка при обработке голосового сообщения:\n{e}")
+        logging.error(f"Voice Error: {e}\n{traceback.format_exc()}")
+        await message.answer(f"Произошла ошибка при обработке:\n{e}")
     finally:
         # Cleanup files
         if os.path.exists(ogg_filename): os.remove(ogg_filename)
