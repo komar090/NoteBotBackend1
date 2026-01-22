@@ -156,7 +156,11 @@ async def get_my_info(initData: str):
     user_id = user['id']
     
     # Check if admin
+    print(f"DEBUG: User ID: {user_id} (type: {type(user_id)})")
+    print(f"DEBUG: Admin IDs: {config.admin_ids} (type: {type(config.admin_ids)})")
+    
     is_admin = user_id in config.admin_ids
+    print(f"DEBUG: Is Admin: {is_admin}")
     
     return {
         "id": user_id,
